@@ -1,0 +1,50 @@
+plugins {
+    id 'java'
+}
+
+group = 'org.example'
+version = '1'
+
+jar {
+    archiveBaseName = "app"
+    manifest {
+        attributes(
+                'Main-Class': 'org.example.Main'
+        )
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+//MY TASKS
+
+tasks.register('run') {
+    description = 'Assembles .jar, deletes docker containers and images, runs new docker container'
+    group = 'docker'
+    dependsOn 'assemble'
+    finalizedBy 'deleteDockerImagesAndContainers'
+}
+
+tasks.register('deleteDockerImagesAndContainers', Exec) {
+    description = 'Delete existing docker containers and images'
+    group = 'docker'
+    commandLine 'docker-compose', 'down', '--rmi', 'all', '--volumes', '--remove-orphans'
+    finalizedBy 'dockerComposeUp'
+}
+
+tasks.register('dockerComposeUp', Exec) {
+    description = 'Start the application using docker compose'
+    group = 'docker'
+    commandLine 'docker-compose', 'up', '--build', '--detach'
+}
